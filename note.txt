@@ -1,0 +1,7 @@
+forward_left = 20
+rear_left = 21
+forward_right = 19
+rear_right = 26
+
+vitesse_gauche = 16 (pwm = 2000)
+vitesse_droite = 13 (pwm = 2000)
