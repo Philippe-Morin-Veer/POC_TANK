@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
-import timefrom evdev import InputDevice, categorize, ecodes
+import time
+from evdev import InputDevice, categorize, ecodes
 
-# Adapter si ton event n'est pas event5
 DEVICE_PATH = "/dev/input/event6"
 
 # === Pins ===
@@ -10,11 +10,11 @@ rear_left = 21
 forward_right = 19
 rear_right = 26
 
-vitesse_gauche = 16   # PWM
-vitesse_droite = 13   # PWM
-pwm_freq = 2000       # Fréquence PWM
+vitesse_gauche = 16   # PWM GPIO
+vitesse_droite = 13   # PWM GPIO
+pwm_freq = 2000       # Hz
 
-# === Configuration des GPIO ===
+# === Config GPIO ===
 GPIO.setmode(GPIO.BCM)
 
 GPIO.setup(forward_left, GPIO.OUT)
@@ -25,68 +25,78 @@ GPIO.setup(rear_right, GPIO.OUT)
 GPIO.setup(vitesse_gauche, GPIO.OUT)
 GPIO.setup(vitesse_droite, GPIO.OUT)
 
-# === PWM ===
+# PWM
 pwm_gauche = GPIO.PWM(vitesse_gauche, pwm_freq)
 pwm_droite = GPIO.PWM(vitesse_droite, pwm_freq)
-
-pwm_gauche.start(0)   # duty cycle à 0%
+pwm_gauche.start(0)
 pwm_droite.start(0)
 
-def xbox():
+# === Variables d’état ===
+val_gauche = 0
+val_droite = 0
+
+
+def set_track_speed(percent, forward_pin, rear_pin, pwm):
+    if percent > 0:
+        GPIO.output(forward_pin, GPIO.HIGH)
+        GPIO.output(rear_pin, GPIO.LOW)
+        pwm.ChangeDutyCycle(percent)
+
+    elif percent < 0:
+        GPIO.output(forward_pin, GPIO.LOW)
+        GPIO.output(rear_pin, GPIO.HIGH)
+        pwm.ChangeDutyCycle(abs(percent))
+
+    else:
+        GPIO.output(forward_pin, GPIO.LOW)
+        GPIO.output(rear_pin, GPIO.LOW)
+        pwm.ChangeDutyCycle(0)
+
+
+def normalize(value):
+    mid = 32767
+    if value == mid:
+        return 0
+
+    if value < mid:
+        return int((mid - value) / mid * 100)
+
+    else:
+        return int(-((value - mid) / mid) * 100)
+
+
+
+def xbox_loop():
+    global val_gauche, val_droite
+
     gamepad = InputDevice(DEVICE_PATH)
-    #print(f"Connecté à : {gamepad.name} ({DEVICE_PATH})")
-    #print("Lecture des événements (Ctrl+C pour arrêter)...")
 
     for event in gamepad.read_loop():
-        # 1) On ignore les events de synchronisation
+
         if event.type == ecodes.EV_SYN:
             continue
 
-        # 2) Joysticks / axes (EV_ABS)
         if event.type == ecodes.EV_ABS:
             absevent = categorize(event)
-            code_name = ecodes.ABS[absevent.event.code]
+            code = ecodes.ABS[absevent.event.code]
             value = absevent.event.value
-            
-            if code_name == "ABS_Y" or code_name == "ABS_RZ":
-                print(value)
-            # Tu verras des choses comme ABS_X, ABS_Y, ABS_RX, ABS_RY
-            #print(f"{code_name} = {value}")
 
-        # 3) Boutons (EV_KEY)
-        elif event.type == ecodes.EV_KEY:
-            keyevent = categorize(event)
-            code_name = ecodes.BTN[keyevent.scancode] if keyevent.scancode in ecodes.BTN else keyevent.scancode
-            print(f"{code_name} = {keyevent.keystate}")  # 1 = press, 0 = release
+            if code == "ABS_Y":
+                val_gauche = normalize(value)
+
+            elif code == "ABS_RZ":
+                val_droite = normalize(value)
+
+            # Appliquer en direct
+            set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
+            set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
+
 
 try:
-    # === Avancer ===
-    print("Tank avance pendant 2 secondes...")
-
-    # Direction : avant = forward = HIGH, rear = LOW
-    GPIO.output(forward_left, GPIO.HIGH)
-    GPIO.output(rear_left, GPIO.LOW)
-    GPIO.output(forward_right, GPIO.HIGH)
-    GPIO.output(rear_right, GPIO.LOW)
-
-    # Vitesse (duty cycle 0 à 100)
-    pwm_gauche.ChangeDutyCycle()   # 80% (tu peux ajuster)
-    pwm_droite.ChangeDutyCycle(80)
-
-    time.sleep(2)
-
-    print("Stop.")
-
-    # === Stop ===
-    GPIO.output(forward_left, GPIO.LOW)
-    GPIO.output(rear_left, GPIO.LOW)
-    GPIO.output(forward_right, GPIO.LOW)
-    GPIO.output(rear_right, GPIO.LOW)
-    pwm_gauche.ChangeDutyCycle(0)
-    pwm_droite.ChangeDutyCycle(0)
+    print("Conduis le tank")
+    xbox_loop()
 
 finally:
     pwm_gauche.stop()
     pwm_droite.stop()
     GPIO.cleanup()
-
