@@ -42,12 +42,9 @@ Tu devrais voir une ligne du type :
 
 Ensuite :
 
-NEW] Device 98:7A:14:23:DE:BB Xbox Wireless Controller
-
-
-pair XX:XX:XX:XX:XX:XX
-trust XX:XX:XX:XX:XX:XX
-connect XX:XX:XX:XX:XX:XX
+pair 98:7A:14:23:DE:BB
+trust 98:7A:14:23:DE:BB
+connect 98:7A:14:23:DE:BB
 
 Si tout se passe bien, tu vois un message du type Connection successful.
 Tu peux ensuite faire :

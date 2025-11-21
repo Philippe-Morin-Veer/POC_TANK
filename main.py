@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time
 from evdev import InputDevice, categorize, ecodes
 
-DEVICE_PATH = "/dev/input/event6"
+DEVICE_PATH = "/dev/input/event4"
 
 # === Pins ===
 forward_left = 20
