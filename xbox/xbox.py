@@ -4,6 +4,7 @@ def main():
     print("Lecture des événements de la manette (Ctrl+C pour arrêter)...")
     while True:
         events = get_gamepad()
+        print(events)
         for event in events:
             # Joystick gauche: ABS_X (gauche/droite), ABS_Y (haut/bas)
             # Joystick droit : ABS_RX, ABS_RY

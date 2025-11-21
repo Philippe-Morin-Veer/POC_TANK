@@ -1,7 +1,7 @@
 from evdev import InputDevice, categorize, ecodes
 
 # Adapter si ton event n'est pas event5
-DEVICE_PATH = "/dev/input/event5"
+DEVICE_PATH = "/dev/input/event6"
 
 def main():
     gamepad = InputDevice(DEVICE_PATH)

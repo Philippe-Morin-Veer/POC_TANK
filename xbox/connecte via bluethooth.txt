@@ -38,9 +38,12 @@ scan on
 
 Tu devrais voir une ligne du type :
 
-[NEW] Device XX:XX:XX:XX:XX:XX Xbox Wireless Controller
+[NEW] Device 98:7A:14:23:DE:BB Xbox Wireless Controller
 
 Ensuite :
+
+NEW] Device 98:7A:14:23:DE:BB Xbox Wireless Controller
+
 
 pair XX:XX:XX:XX:XX:XX
 trust XX:XX:XX:XX:XX:XX
