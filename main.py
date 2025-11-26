@@ -1,9 +1,7 @@
 import RPi.GPIO as GPIO
 import time
-from evdev import InputDevice, categorize, ecodes
 import threading
-import xbox
-
+import xbox   # <-- on importe le module
 
 DEVICE_PATH = "/dev/input/event4"
 
@@ -48,6 +46,7 @@ def set_track_speed(percent, forward_pin, rear_pin, pwm):
 def stop_tank():
     set_track_speed(0, forward_left, rear_left, pwm_gauche)
     set_track_speed(0, forward_right, rear_right, pwm_droite)
+    print("Tank arrêté (sécurité).")
 
 def normalize(value):
     mid = 32767
@@ -68,34 +67,28 @@ def heartbeat():
         now = time.time()
         if now - last_event_time > timeout:
             stop_tank()
-        time.sleep(0.1)  # vérification toutes les 100 ms
+        time.sleep(0.1)
 
-# === Boucle manette ===
-def xbox_loop():
+# === Boucle principale ===
+def main():
     global last_event_time
-    gamepad = InputDevice(DEVICE_PATH)
-    for event in gamepad.read_loop():
-        if event.type == ecodes.EV_SYN:
-            continue
-        if event.type == ecodes.EV_ABS:
-            absevent = categorize(event)
-            code = ecodes.ABS[absevent.event.code]
-            value = absevent.event.value
+    while True:
+        values = xbox.read_gamepad()
+        if values:
+            last_event_time = time.time()
 
-            if code == "ABS_Y":
-                val_gauche = normalize(value)
-                set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
-            elif code == "ABS_RZ":
-                val_droite = normalize(value)
-                set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
-
-            last_event_time = time.time()  # mise à jour du heartbeat
+        if "ABS_Y" in values:
+            val_gauche = normalize(values["ABS_Y"])
+            set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
+        if "ABS_RY" in values:
+            val_droite = normalize(values["ABS_RY"])
+            set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
 
 # === Main ===
 try:
     print("Conduis le tank")
     threading.Thread(target=heartbeat, daemon=True).start()
-    xbox_loop()
+    main()   # <-- ici on lance la boucle principale
 finally:
     stop_tank()
     pwm_gauche.stop()
