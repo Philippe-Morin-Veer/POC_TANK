@@ -59,3 +59,20 @@ Tu devrais avoir un device du style eventX associé à la manette.
 Tu peux aussi vérifier avec :
 
 cat /proc/bus/input/devices | grep -i -A5 xbox
+
+LANCER LE SERVEUR WEB:
+Dans le terminal :
+mjpg_streamer \
+  -i "input_uvc.so -d /dev/video0 -r 640x480 -f 30 --no_dynctrl" \
+  -o "output_http.so -p 8080 -w ~/POC_TANK/mjpg-streamer/mjpg-streamer-experimental/www"
+  
+  
+Ensuite, on ouvre ce lien sur le web:
+http://10.4.1.50:8080/?action=stream
+
+
+LANCER LE TANK:
+On run le .venv dans bin:
+source activate
+
+python main.py
