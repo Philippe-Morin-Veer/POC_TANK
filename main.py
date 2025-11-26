@@ -1,6 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 from evdev import InputDevice, categorize, ecodes
+import threading
 
 DEVICE_PATH = "/dev/input/event4"
 
@@ -10,22 +11,18 @@ rear_left = 21
 forward_right = 19
 rear_right = 26
 
-vitesse_gauche = 16   # PWM GPIO
-vitesse_droite = 13   # PWM GPIO
-pwm_freq = 2000       # Hz
+vitesse_gauche = 16
+vitesse_droite = 13
+pwm_freq = 2000
 
-# === Config GPIO ===
 GPIO.setmode(GPIO.BCM)
-
 GPIO.setup(forward_left, GPIO.OUT)
 GPIO.setup(rear_left, GPIO.OUT)
 GPIO.setup(forward_right, GPIO.OUT)
 GPIO.setup(rear_right, GPIO.OUT)
-
 GPIO.setup(vitesse_gauche, GPIO.OUT)
 GPIO.setup(vitesse_droite, GPIO.OUT)
 
-# PWM
 pwm_gauche = GPIO.PWM(vitesse_gauche, pwm_freq)
 pwm_droite = GPIO.PWM(vitesse_droite, pwm_freq)
 pwm_gauche.start(0)
@@ -49,7 +46,7 @@ def set_track_speed(percent, forward_pin, rear_pin, pwm):
 def stop_tank():
     set_track_speed(0, forward_left, rear_left, pwm_gauche)
     set_track_speed(0, forward_right, rear_right, pwm_droite)
-    print("Tank arrêté (sécurité).")
+    print("Tank arrêté (heartbeat).")
 
 def normalize(value):
     mid = 32767
@@ -60,25 +57,25 @@ def normalize(value):
     else:
         return int(-((value - mid) / mid) * 100)
 
-# === Boucle principale avec timeout ===
-def xbox_loop():
-    val_gauche = 0
-    val_droite = 0
-    last_event_time = time.time()
-    timeout = 1.0  # secondes
+# === Heartbeat ===
+last_event_time = time.time()
+timeout = 1.0  # secondes
 
-    gamepad = InputDevice(DEVICE_PATH)
-
-    for event in gamepad.read_loop():
+def heartbeat():
+    global last_event_time
+    while True:
         now = time.time()
-
-        # Vérifier le timeout
         if now - last_event_time > timeout:
             stop_tank()
+        time.sleep(0.1)  # vérification toutes les 100 ms
 
+# === Boucle manette ===
+def xbox_loop():
+    global last_event_time
+    gamepad = InputDevice(DEVICE_PATH)
+    for event in gamepad.read_loop():
         if event.type == ecodes.EV_SYN:
             continue
-
         if event.type == ecodes.EV_ABS:
             absevent = categorize(event)
             code = ecodes.ABS[absevent.event.code]
@@ -86,16 +83,17 @@ def xbox_loop():
 
             if code == "ABS_Y":
                 val_gauche = normalize(value)
+                set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
             elif code == "ABS_RZ":
                 val_droite = normalize(value)
+                set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
 
-            set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
-            set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
+            last_event_time = time.time()  # mise à jour du heartbeat
 
-            last_event_time = now  # mise à jour
-
+# === Main ===
 try:
-    print("Conduis le tank")
+    print("Conduis le tank avec heartbeat")
+    threading.Thread(target=heartbeat, daemon=True).start()
     xbox_loop()
 finally:
     stop_tank()
