@@ -31,47 +31,50 @@ pwm_droite = GPIO.PWM(vitesse_droite, pwm_freq)
 pwm_gauche.start(0)
 pwm_droite.start(0)
 
-# === Variables d’état ===
-val_gauche = 0
-val_droite = 0
-
-
+# === Fonctions ===
 def set_track_speed(percent, forward_pin, rear_pin, pwm):
     if percent > 0:
         GPIO.output(forward_pin, GPIO.HIGH)
         GPIO.output(rear_pin, GPIO.LOW)
         pwm.ChangeDutyCycle(percent)
-
     elif percent < 0:
         GPIO.output(forward_pin, GPIO.LOW)
         GPIO.output(rear_pin, GPIO.HIGH)
         pwm.ChangeDutyCycle(abs(percent))
-
     else:
         GPIO.output(forward_pin, GPIO.LOW)
         GPIO.output(rear_pin, GPIO.LOW)
         pwm.ChangeDutyCycle(0)
 
+def stop_tank():
+    set_track_speed(0, forward_left, rear_left, pwm_gauche)
+    set_track_speed(0, forward_right, rear_right, pwm_droite)
+    print("Tank arrêté (sécurité).")
 
 def normalize(value):
     mid = 32767
     if value == mid:
         return 0
-
     if value < mid:
         return int((mid - value) / mid * 100)
-
     else:
         return int(-((value - mid) / mid) * 100)
 
-
-
+# === Boucle principale avec timeout ===
 def xbox_loop():
-    global val_gauche, val_droite
+    val_gauche = 0
+    val_droite = 0
+    last_event_time = time.time()
+    timeout = 1.0  # secondes
 
     gamepad = InputDevice(DEVICE_PATH)
 
     for event in gamepad.read_loop():
+        now = time.time()
+
+        # Vérifier le timeout
+        if now - last_event_time > timeout:
+            stop_tank()
 
         if event.type == ecodes.EV_SYN:
             continue
@@ -83,23 +86,17 @@ def xbox_loop():
 
             if code == "ABS_Y":
                 val_gauche = normalize(value)
-
             elif code == "ABS_RZ":
                 val_droite = normalize(value)
 
-            # Appliquer en direct
             set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
             set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
 
-def stop_tank():
-    set_track_speed(0, forward_left, rear_left, pwm_gauche)
-    set_track_speed(0, forward_right, rear_right, pwm_droite)
-    print("Tank arrêté (sécurité).")
+            last_event_time = now  # mise à jour
 
 try:
     print("Conduis le tank")
     xbox_loop()
-
 finally:
     stop_tank()
     pwm_gauche.stop()
