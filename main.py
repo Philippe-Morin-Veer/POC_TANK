@@ -91,12 +91,17 @@ def xbox_loop():
             set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
             set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
 
+def stop_tank():
+    set_track_speed(0, forward_left, rear_left, pwm_gauche)
+    set_track_speed(0, forward_right, rear_right, pwm_droite)
+    print("Tank arrêté (sécurité).")
 
 try:
     print("Conduis le tank")
     xbox_loop()
 
 finally:
+    stop_tank()
     pwm_gauche.stop()
     pwm_droite.stop()
     GPIO.cleanup()
