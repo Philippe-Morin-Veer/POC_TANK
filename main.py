@@ -46,7 +46,6 @@ def set_track_speed(percent, forward_pin, rear_pin, pwm):
 def stop_tank():
     set_track_speed(0, forward_left, rear_left, pwm_gauche)
     set_track_speed(0, forward_right, rear_right, pwm_droite)
-    print("Tank arrêté (heartbeat).")
 
 def normalize(value):
     mid = 32767
@@ -92,7 +91,7 @@ def xbox_loop():
 
 # === Main ===
 try:
-    print("Conduis le tank avec heartbeat")
+    print("Conduis le tank")
     threading.Thread(target=heartbeat, daemon=True).start()
     xbox_loop()
 finally:
