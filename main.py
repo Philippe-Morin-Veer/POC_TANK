@@ -2,7 +2,6 @@ import RPi.GPIO as GPIO
 import time
 from evdev import InputDevice, categorize, ecodes
 import threading
-import xbox
 
 
 DEVICE_PATH = "/dev/input/event4"
