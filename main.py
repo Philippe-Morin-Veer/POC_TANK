@@ -2,6 +2,8 @@ import RPi.GPIO as GPIO
 import time
 from evdev import InputDevice, categorize, ecodes
 import threading
+import xbox
+
 
 DEVICE_PATH = "/dev/input/event4"
 
@@ -69,31 +71,21 @@ def heartbeat():
         time.sleep(0.1)  # vérification toutes les 100 ms
 
 # === Boucle manette ===
-def xbox_loop():
-    global last_event_time
-    gamepad = InputDevice(DEVICE_PATH)
-    for event in gamepad.read_loop():
-        if event.type == ecodes.EV_SYN:
-            continue
-        if event.type == ecodes.EV_ABS:
-            absevent = categorize(event)
-            code = ecodes.ABS[absevent.event.code]
-            value = absevent.event.value
-
-            if code == "ABS_Y":
-                val_gauche = normalize(value)
-                set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
-            elif code == "ABS_RZ":
-                val_droite = normalize(value)
-                set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
-
-            last_event_time = time.time()  # mise à jour du heartbeat
+def main():
+    while True:
+        values = xbox.read_gamepad()
+        # Exemple : utiliser ABS_Y pour vitesse gauche
+        if "ABS_Y" in values:
+            val_gauche = normalize(values["ABS_Y"])
+            set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
+        if "ABS_RY" in values:
+            val_droite = normalize(values["ABS_RY"])
+            set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
 
 # === Main ===
 try:
     print("Conduis le tank")
     threading.Thread(target=heartbeat, daemon=True).start()
-    xbox_loop()
 finally:
     stop_tank()
     pwm_gauche.stop()
