@@ -77,17 +77,14 @@ def main():
     while True:
         values = xbox.get_values()
         last_event_time = time.time()
-        print(values)
         # Gauche = ABS_Y
-        if "ABS_Y" and "BTN_TR" in values:
+        if "ABS_Y" in values:
             val_gauche = normalize(values["ABS_Y"])
-            print(f"Gauche: {val_gauche}")
             set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
 
         # Droite = ABS_RZ
-        if "ABS_RZ" and "BTN_TR" in values:
+        if "ABS_RZ" in values:
             val_droite = normalize(values["ABS_RZ"])
-            print(f"Droite: {val_droite}")
             set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
 
         time.sleep(0.02) 

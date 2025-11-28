@@ -8,11 +8,10 @@ class XboxController:
         self.gamepad = None
 
         self.values = {
-            "ABS_X": 0,
-            "ABS_Y": 0,
-            "ABS_Z": 0,
-            "ABS_RZ": 0,
-            "BTN_TR": 0,
+            "ABS_X": 32767,
+            "ABS_Y": 32767,
+            "ABS_Z": 32767,
+            "ABS_RZ": 32767,
         }
 
         self.running = False
