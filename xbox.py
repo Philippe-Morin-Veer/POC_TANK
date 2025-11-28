@@ -12,6 +12,7 @@ class XboxController:
             "ABS_Y": 0,
             "ABS_Z": 0,
             "ABS_RZ": 0,
+            "BTN_TR": 0,
         }
 
         self.running = False
