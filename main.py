@@ -85,12 +85,12 @@ def main():
             print(f"Gauche: {val_gauche}")
             set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
 
-        # Droite = ABS_RY
-        if "ABS_RY" in values:
-            val_droite = normalize(values["ABS_RY"])
+        # Droite = ABS_RZ
+        if "ABS_RZ" in values:
+            val_droite = normalize(values["ABS_RZ"])
             print(f"Droite: {val_droite}")
             set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
-            
+
         time.sleep(0.02)  # loop légère pour éviter de saturer le CPU
 
 

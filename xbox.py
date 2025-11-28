@@ -10,8 +10,8 @@ class XboxController:
         self.values = {
             "ABS_X": 0,
             "ABS_Y": 0,
-            "ABS_RX": 0,
-            "ABS_RY": 0,
+            "ABS_Z": 0,
+            "ABS_RZ": 0,
         }
 
         self.running = False
