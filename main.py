@@ -2,6 +2,7 @@ import RPi.GPIO as GPIO
 import time
 import threading
 from xbox import XboxController
+from chenille import Chenille
 
 # === Pins ===
 forward_left = 20
@@ -14,38 +15,13 @@ vitesse_droite = 13
 pwm_freq = 2000
 
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(forward_left, GPIO.OUT)
-GPIO.setup(rear_left, GPIO.OUT)
-GPIO.setup(forward_right, GPIO.OUT)
-GPIO.setup(rear_right, GPIO.OUT)
-GPIO.setup(vitesse_gauche, GPIO.OUT)
-GPIO.setup(vitesse_droite, GPIO.OUT)
 
-pwm_gauche = GPIO.PWM(vitesse_gauche, pwm_freq)
-pwm_droite = GPIO.PWM(vitesse_droite, pwm_freq)
-pwm_gauche.start(0)
-pwm_droite.start(0)
+# === Création des deux chenilles ===
+left_track = Chenille(forward_left, rear_left, vitesse_gauche, pwm_freq)
+right_track = Chenille(forward_right, rear_right, vitesse_droite, pwm_freq)
+
 
 # === Fonctions ===
-def set_track_speed(percent, forward_pin, rear_pin, pwm):
-    if percent > 0:
-        GPIO.output(forward_pin, GPIO.HIGH)
-        GPIO.output(rear_pin, GPIO.LOW)
-        pwm.ChangeDutyCycle(percent)
-    elif percent < 0:
-        GPIO.output(forward_pin, GPIO.LOW)
-        GPIO.output(rear_pin, GPIO.HIGH)
-        pwm.ChangeDutyCycle(abs(percent))
-    else:
-        GPIO.output(forward_pin, GPIO.LOW)
-        GPIO.output(rear_pin, GPIO.LOW)
-        pwm.ChangeDutyCycle(0)
-
-def stop_tank():
-    set_track_speed(0, forward_left, rear_left, pwm_gauche)
-    set_track_speed(0, forward_right, rear_right, pwm_droite)
-    print("Tank arrêté (sécurité).")
-
 def normalize(value):
     mid = 32767
     if value == mid:
@@ -55,7 +31,14 @@ def normalize(value):
     else:
         return int(-((value - mid) / mid) * 100)
 
-# === Heartbeat ===
+
+def stop_tank():
+    left_track.stop()
+    right_track.stop()
+    print("Tank arrêté (sécurité).")
+
+
+# === Heartbeat (sécurité si manette déconnectée) ===
 last_event_time = time.time()
 timeout = 1.0
 
@@ -67,6 +50,7 @@ def heartbeat():
             stop_tank()
         time.sleep(0.1)
 
+
 # === Boucle principale ===
 def main():
     global last_event_time
@@ -77,26 +61,28 @@ def main():
     while True:
         values = xbox.get_values()
         last_event_time = time.time()
-        # Gauche = ABS_Y
+
+        # --- Chenille gauche (joystick gauche Y) ---
         if "ABS_Y" in values:
             val_gauche = normalize(values["ABS_Y"])
-            set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
+            left_track.set_speed(val_gauche)
 
-        # Droite = ABS_RZ
+        # --- Chenille droite (trigger / joystick selon ton mapping) ---
         if "ABS_RZ" in values:
             val_droite = normalize(values["ABS_RZ"])
-            set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
+            right_track.set_speed(val_droite)
 
-        time.sleep(0.02) 
+        time.sleep(0.02)
 
 
-# === Main ===
+# === Programme principal ===
 try:
-    print("Conduis le tank")
+    print("Conduis le tank!")
     threading.Thread(target=heartbeat, daemon=True).start()
     main()
+
 finally:
     stop_tank()
-    pwm_gauche.stop()
-    pwm_droite.stop()
+    left_track.cleanup()
+    right_track.cleanup()
     GPIO.cleanup()
