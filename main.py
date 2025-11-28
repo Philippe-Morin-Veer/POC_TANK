@@ -1,9 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import threading
-import xbox   # <-- on importe le module
-
-DEVICE_PATH = "/dev/input/event4"
+from xbox import XboxController   # <-- ta nouvelle classe
 
 # === Pins ===
 forward_left = 20
@@ -59,7 +57,7 @@ def normalize(value):
 
 # === Heartbeat ===
 last_event_time = time.time()
-timeout = 1.0  # secondes
+timeout = 1.0  # sécurité manette : si plus d'input → arrêt
 
 def heartbeat():
     global last_event_time
@@ -72,23 +70,33 @@ def heartbeat():
 # === Boucle principale ===
 def main():
     global last_event_time
-    while True:
-        values = xbox.read_gamepad()
-        if values:
-            last_event_time = time.time()
 
+    controller = XboxController()
+    controller.start()   # <-- lancement du thread manette
+
+    while True:
+        values = controller.get_values()
+        # Si des valeurs changent, la manette est active
+        last_event_time = time.time()
+
+        # Gauche = ABS_Y
         if "ABS_Y" in values:
             val_gauche = normalize(values["ABS_Y"])
             set_track_speed(val_gauche, forward_left, rear_left, pwm_gauche)
+
+        # Droite = ABS_RY
         if "ABS_RY" in values:
             val_droite = normalize(values["ABS_RY"])
             set_track_speed(val_droite, forward_right, rear_right, pwm_droite)
+
+        time.sleep(0.02)  # loop légère pour éviter de saturer le CPU
+
 
 # === Main ===
 try:
     print("Conduis le tank")
     threading.Thread(target=heartbeat, daemon=True).start()
-    main()   # <-- ici on lance la boucle principale
+    main()
 finally:
     stop_tank()
     pwm_gauche.stop()
