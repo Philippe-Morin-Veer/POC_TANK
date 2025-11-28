@@ -10,7 +10,6 @@ class XboxController:
             "ABS_Y": 0,
             "ABS_RX": 0,
             "ABS_RY": 0,
-            # Ajout possible de boutons ici
         }
 
         self.running = False

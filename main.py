@@ -1,7 +1,7 @@
 import RPi.GPIO as GPIO
 import time
 import threading
-from xbox import XboxController   # <-- ta nouvelle classe
+from xbox import XboxController
 
 # === Pins ===
 forward_left = 20
