@@ -57,7 +57,7 @@ def normalize(value):
 
 # === Heartbeat ===
 last_event_time = time.time()
-timeout = 1.0  # sécurité manette : si plus d'input → arrêt
+timeout = 1.0
 
 def heartbeat():
     global last_event_time
@@ -71,11 +71,11 @@ def heartbeat():
 def main():
     global last_event_time
 
-    controller = XboxController()
-    controller.start()   # <-- lancement du thread manette
+    xbox = XboxController("/dev/input/event4")
+    xbox.start()
 
     while True:
-        values = controller.get_values()
+        values = xbox.get_values()
         # Si des valeurs changent, la manette est active
         last_event_time = time.time()
 

@@ -1,10 +1,12 @@
-from inputs import get_gamepad
-import time
+from evdev import InputDevice, categorize, ecodes
 import threading
+import time
 
 class XboxController:
-    def __init__(self):
-        """Initialisation de la manette Xbox."""
+    def __init__(self, device_path="/dev/input/event4"):
+        self.device_path = device_path
+        self.gamepad = None
+
         self.values = {
             "ABS_X": 0,
             "ABS_Y": 0,
@@ -16,31 +18,37 @@ class XboxController:
         self.thread = None
 
     def _read_loop(self):
-        """Boucle qui lit constamment les événements de la manette."""
-        while self.running:
-            events = get_gamepad()
-            for event in events:
-                if event.ev_type == "Absolute":
-                    if event.code in self.values:
-                        self.values[event.code] = event.state
-                elif event.ev_type == "Key":
-                    self.values[event.code] = event.state
+        """Boucle de lecture continue."""
+        try:
+            self.gamepad = InputDevice(self.device_path)
+            print(f"Manette détectée sur {self.device_path}")
+        except Exception as e:
+            print(f"ERREUR : impossible d'ouvrir {self.device_path} -> {e}")
+            self.running = False
+            return
 
-            time.sleep(0.01)  # éviter de monopoliser le CPU
+        for event in self.gamepad.read_loop():
+            if not self.running:
+                break
+
+            if event.type == ecodes.EV_ABS:
+                absevent = categorize(event)
+                code = ecodes.ABS[absevent.event.code]
+                value = absevent.event.value
+
+                if code in self.values:
+                    self.values[code] = value
+
+            time.sleep(0.001)
 
     def start(self):
-        """Lance la lecture de la manette en arrière-plan."""
         if not self.running:
             self.running = True
             self.thread = threading.Thread(target=self._read_loop, daemon=True)
             self.thread.start()
 
     def stop(self):
-        """Arrête la lecture de la manette."""
         self.running = False
-        if self.thread:
-            self.thread.join()
 
     def get_values(self):
-        """Retourne les dernières valeurs connues."""
         return dict(self.values)
