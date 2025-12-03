@@ -12,11 +12,11 @@ class XboxController:
             "ABS_RZ": 32767,
         }
 
+        self.new_event = False   # <<< NOUVEAU FLAG
         self.running = False
         self.thread = None
 
     def _open_device(self):
-        """Ouvre la manette si possible, sinon False."""
         try:
             self.gamepad = InputDevice(self.device_path)
             self.connected = True
@@ -27,14 +27,12 @@ class XboxController:
             return False
 
     def _read_loop(self):
-        """Boucle de lecture continue."""
         if not self._open_device():
             print("[Xbox] Aucune manette trouvée.")
             return
 
         while self.running:
             try:
-                # Lecture bloquante
                 for event in self.gamepad.read_loop():
 
                     if not self.running:
@@ -47,25 +45,26 @@ class XboxController:
 
                         if code in self.values:
                             self.values[code] = value
+                            self.new_event = True       # <<< NOUVEAU : événement réel
 
-                    # Petite pause
                     time.sleep(0.001)
 
             except OSError:
-                # Manette débranchée
                 print("[Xbox] Manette déconnectée")
-
                 self.connected = False
-                self.values = dict(self.neutral_values)  # reset
+
+                self.values = {
+                    "ABS_Y": 32767,
+                    "ABS_RZ": 32767,
+                }
                 time.sleep(0.5)
 
-                # Tentative de reconnexion
                 while self.running and not self._open_device():
                     time.sleep(1)
 
             except Exception as e:
                 print(f"[Xbox] Erreur inconnue : {e}")
-        
+
     def start(self):
         if not self.running:
             self.running = True
@@ -79,9 +78,14 @@ class XboxController:
         if not self.connected:
             return None
         return dict(self.values)
-    
+
+    def pop_new_event(self):  # <<< MÉTHODE AJOUTÉE
+        if self.new_event:
+            self.new_event = False
+            return True
+        return False
+
     def convert_to_percent(self, value):
-        """Convertit une valeur ABS en pourcentage [-100, 100]."""
         mid = 32767
         if value == mid:
             return 0
