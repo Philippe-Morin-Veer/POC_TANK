@@ -48,7 +48,7 @@ def heartbeat():
         now = time.time()
         if now - last_event_time > timeout:
             stop_tank()
-        time.sleep(0.1)
+        time.sleep(0.2)
 
 
 # === Boucle principale ===
