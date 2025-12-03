@@ -14,6 +14,7 @@ vitesse_gauche = 16
 vitesse_droite = 13
 pwm_freq = 2000
 varXbox = XboxController("/dev/input/event4")
+isConnected = False
 
 GPIO.setmode(GPIO.BCM)
 
@@ -54,6 +55,9 @@ def heartbeat(xbox_controller):
             if now - last_event > timeout:
                 print("Heartbeat timeout! Arrêt du tank.")
                 stop_tank()
+                isConnected = False
+            else:
+                isConnected = True
             print(now - last_event)
             time.sleep(0.2)
     except Exception as e:
@@ -74,7 +78,7 @@ def main():
             continue
         last_event_time = time.time()
         # --- Chenille gauche (joystick gauche Y) ---
-        if "ABS_Y" in values:
+        if "ABS_Y" in values and isConnected==True:
             raw = values["ABS_Y"]
             val_gauche = varXbox.convert_to_percent(raw)
             if val_gauche > deadzone or val_gauche < -deadzone:
@@ -83,7 +87,7 @@ def main():
                 left_track.stop()
 
         # --- Chenille droite (trigger / joystick selon ton mapping) ---
-        if "ABS_RZ" in values:
+        if "ABS_RZ" in values and isConnected==True:
             raw = values["ABS_RZ"]
             val_droite = varXbox.convert_to_percent(raw)
             if val_droite > deadzone or val_droite < -deadzone:
