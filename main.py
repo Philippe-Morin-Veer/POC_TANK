@@ -46,6 +46,7 @@ timeout = 1.0
 def heartbeat(xbox_controller):
     global last_event_time
     while True:
+        print("Heartbeat check...")
         last_event = xbox_controller.last_event
         now = time.time()
         if now - last_event > timeout:
