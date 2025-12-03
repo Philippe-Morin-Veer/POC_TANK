@@ -61,6 +61,7 @@ def main():
 
     while True:
         values = xbox.get_values()
+        print(values)
         if values is None:
             time.sleep(0.02)
             continue
