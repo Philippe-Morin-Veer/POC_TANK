@@ -42,7 +42,7 @@ def stop_tank():
 
 # === Heartbeat (sécurité si manette déconnectée) ===
 last_event_time = time.time()
-timeout = 2.0
+timeout = 1.0
 
 def heartbeat(xbox_controller):
     try:
