@@ -37,11 +37,12 @@ class XboxController:
 
         while self.running:
             try:
-                self.last_event = time.time()
+                
                 print("[Xbox] Lecture des événements...")
                 # Lecture bloquante
                 for event in self.gamepad.read_loop():
                     print(f"boucle")
+                    self.last_event = time.time()
                     if not self.running:
                         break
 
