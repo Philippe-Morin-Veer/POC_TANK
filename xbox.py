@@ -6,7 +6,7 @@ class XboxController:
     def __init__(self, device_path="/dev/input/event4"):
         self.device_path = device_path
         self.gamepad = None
-
+        self.connected = False
         self.values = {
             #"ABS_X": 32767,
             "ABS_Y": 32767,
