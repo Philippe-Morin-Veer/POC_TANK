@@ -45,8 +45,9 @@ timeout = 1.0
 def heartbeat():
     global last_event_time
     while True:
+        last_event = XboxController.last_event
         now = time.time()
-        if now - last_event_time > timeout:
+        if now - last_event > timeout:
             print("Heartbeat timeout! Arrêt du tank.")
             stop_tank()
         time.sleep(0.2)

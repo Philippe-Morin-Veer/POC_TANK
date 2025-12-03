@@ -28,12 +28,14 @@ class XboxController:
 
     def _read_loop(self):
         """Boucle de lecture continue."""
+        last_event = time.time()
         if not self._open_device():
             print("[Xbox] Aucune manette trouvée.")
             return
 
         while self.running:
             try:
+                last_event = time.time()
                 # Lecture bloquante
                 for event in self.gamepad.read_loop():
 
