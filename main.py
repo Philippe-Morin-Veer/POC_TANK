@@ -53,6 +53,7 @@ def heartbeat(xbox_controller):
             print("Heartbeat check...")
             last_event = xbox_controller.last_event
             now = time.time()
+            print("Last event:", last_event)
             if now - last_event > timeout:
                 print("Heartbeat timeout! Arrêt du tank.")
                 stop_tank()
