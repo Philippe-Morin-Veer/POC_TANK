@@ -13,6 +13,7 @@ rear_right = 26
 vitesse_gauche = 16
 vitesse_droite = 13
 pwm_freq = 2000
+varXbox = XboxController("/dev/input/event4")
 
 GPIO.setmode(GPIO.BCM)
 
@@ -42,10 +43,10 @@ def stop_tank():
 last_event_time = time.time()
 timeout = 1.0
 
-def heartbeat():
+def heartbeat(xbox_controller):
     global last_event_time
     while True:
-        last_event = XboxController.last_event
+        last_event = xbox_controller.last_event
         now = time.time()
         if now - last_event > timeout:
             print("Heartbeat timeout! Arrêt du tank.")
@@ -58,11 +59,10 @@ def heartbeat():
 def main():
     global last_event_time
     deadzone = 30
-    xbox = XboxController("/dev/input/event4")
-    xbox.start()
+    varXbox.start()
 
     while True:
-        values = xbox.get_values()
+        values = varXbox.get_values()
         print(values)
         if values is None:
             time.sleep(0.02)
@@ -71,7 +71,7 @@ def main():
         # --- Chenille gauche (joystick gauche Y) ---
         if "ABS_Y" in values:
             raw = values["ABS_Y"]
-            val_gauche = xbox.convert_to_percent(raw)
+            val_gauche = varXbox.convert_to_percent(raw)
             if val_gauche > deadzone or val_gauche < -deadzone:
                 left_track.set_speed(val_gauche)
             else:
@@ -80,7 +80,7 @@ def main():
         # --- Chenille droite (trigger / joystick selon ton mapping) ---
         if "ABS_RZ" in values:
             raw = values["ABS_RZ"]
-            val_droite = xbox.convert_to_percent(raw)
+            val_droite = varXbox.convert_to_percent(raw)
             if val_droite > deadzone or val_droite < -deadzone:
                 right_track.set_speed(val_droite)
             else:
@@ -92,7 +92,7 @@ def main():
 # === Programme principal ===
 try:
     print("Conduis le tank!")
-    threading.Thread(target=heartbeat, daemon=True).start()
+    threading.Thread(target=heartbeat, args=(varXbox,), daemon=True).start()
     main()
 
 finally:
