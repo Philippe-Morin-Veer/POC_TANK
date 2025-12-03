@@ -22,16 +22,6 @@ right_track = Chenille(forward_right, rear_right, vitesse_droite, pwm_freq)
 
 
 # === Fonctions ===
-"""def normalize(value):
-    mid = 32767
-    if value == mid:
-        return 0
-    if value < mid:
-        return int((mid - value) / mid * 100)
-    else:
-        return int(-((value - mid) / mid) * 100)"""
-
-
 def stop_tank():
     left_track.stop()
     right_track.stop()
@@ -40,14 +30,15 @@ def stop_tank():
 
 # === Heartbeat (sécurité si manette déconnectée) ===
 last_event_time = time.time()
-timeout = 1.0
+timeout = 1.0   # délai max sans événement
+
 
 def heartbeat():
     global last_event_time
     while True:
         now = time.time()
         if now - last_event_time > timeout:
-            print("Heartbeat timeout! Arrêt du tank.")
+            print("⛔ Heartbeat timeout! Arrêt du tank.")
             stop_tank()
         time.sleep(0.2)
 
@@ -61,29 +52,35 @@ def main():
 
     while True:
         values = xbox.get_values()
-        print(values)
-        if values is None:
-            time.sleep(0.02)
-            continue
-        last_event_time = time.time()
-        # --- Chenille gauche (joystick gauche Y) ---
-        if "ABS_Y" in values:
-            raw = values["ABS_Y"]
-            val_gauche = xbox.convert_to_percent(raw)
-            if val_gauche > deadzone or val_gauche < -deadzone:
-                left_track.set_speed(val_gauche)
-            else:
-                left_track.stop()
 
-        # --- Chenille droite (trigger / joystick selon ton mapping) ---
-        if "ABS_RZ" in values:
-            raw = values["ABS_RZ"]
-            val_droite = xbox.convert_to_percent(raw)
-            if val_droite > deadzone or val_droite < -deadzone:
-                right_track.set_speed(val_droite)
-            else:
-                right_track.stop()
-        values = None
+        # Manette déconnectée
+        if values is None:
+            stop_tank()
+            time.sleep(0.1)
+            continue
+
+        # Mise à jour du heartbeat UNIQUEMENT si nouvel événement
+        if xbox.pop_new_event():
+            last_event_time = time.time()
+
+        # --- Chenille gauche (joystick gauche Y) ---
+        raw_left = values.get("ABS_Y", 32767)
+        val_gauche = xbox.convert_to_percent(raw_left)
+
+        if abs(val_gauche) > deadzone:
+            left_track.set_speed(val_gauche)
+        else:
+            left_track.stop()
+
+        # --- Chenille droite (ABS_RZ) ---
+        raw_right = values.get("ABS_RZ", 32767)
+        val_droite = xbox.convert_to_percent(raw_right)
+
+        if abs(val_droite) > deadzone:
+            right_track.set_speed(val_droite)
+        else:
+            right_track.stop()
+
         time.sleep(0.02)
 
 
