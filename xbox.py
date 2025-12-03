@@ -8,38 +8,65 @@ class XboxController:
         self.gamepad = None
 
         self.values = {
-            "ABS_X": 32767,
+            #"ABS_X": 32767,
             "ABS_Y": 32767,
-            "ABS_Z": 32767,
+            #"ABS_Z": 32767,
             "ABS_RZ": 32767,
         }
 
         self.running = False
         self.thread = None
 
-    def _read_loop(self):
-        """Boucle de lecture continue."""
+    def _open_device(self):
+        """Ouvre la manette si possible, sinon False."""
         try:
             self.gamepad = InputDevice(self.device_path)
-            print(f"Manette détectée sur {self.device_path}")
-        except Exception as e:
-            print(f"ERREUR : impossible d'ouvrir {self.device_path} -> {e}")
-            self.running = False
+            self.connected = True
+            print(f"[Xbox] Manette détectée : {self.device_path}")
+            return True
+        except:
+            self.connected = False
+            return False
+
+    def _read_loop(self):
+        """Boucle de lecture continue."""
+        if not self._open_device():
+            print("[Xbox] Aucune manette trouvée.")
             return
 
-        for event in self.gamepad.read_loop():
-            if not self.running:
-                break
+        while self.running:
+            try:
+                # Lecture bloquante
+                for event in self.gamepad.read_loop():
 
-            if event.type == ecodes.EV_ABS:
-                absevent = categorize(event)
-                code = ecodes.ABS[absevent.event.code]
-                value = absevent.event.value
+                    if not self.running:
+                        break
 
-                if code in self.values:
-                    self.values[code] = value
+                    if event.type == ecodes.EV_ABS:
+                        absevent = categorize(event)
+                        code = ecodes.ABS[absevent.event.code]
+                        value = absevent.event.value
 
-            time.sleep(0.001)
+                        if code in self.values:
+                            self.values[code] = value
+
+                    # Petite pause
+                    time.sleep(0.001)
+
+            except OSError:
+                # Manette débranchée
+                print("[Xbox] Manette déconnectée")
+
+                self.connected = False
+                self.values = dict(self.neutral_values)  # reset
+                time.sleep(0.5)
+
+                # Tentative de reconnexion
+                while self.running and not self._open_device():
+                    time.sleep(1)
+
+            except Exception as e:
+                print(f"[Xbox] Erreur inconnue : {e}")
         
     def start(self):
         if not self.running:
@@ -51,4 +78,16 @@ class XboxController:
         self.running = False
 
     def get_values(self):
+        if not self.connected:
+            return None
         return dict(self.values)
+    
+    def convert_to_percent(self, value):
+        """Convertit une valeur ABS en pourcentage [-100, 100]."""
+        mid = 32767
+        if value == mid:
+            return 0
+        if value < mid:
+            return int((mid - value) / mid * 100)
+        else:
+            return int(-((value - mid) / mid) * 100)

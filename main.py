@@ -22,14 +22,14 @@ right_track = Chenille(forward_right, rear_right, vitesse_droite, pwm_freq)
 
 
 # === Fonctions ===
-def normalize(value):
+"""def normalize(value):
     mid = 32767
     if value == mid:
         return 0
     if value < mid:
         return int((mid - value) / mid * 100)
     else:
-        return int(-((value - mid) / mid) * 100)
+        return int(-((value - mid) / mid) * 100)"""
 
 
 def stop_tank():
@@ -60,16 +60,21 @@ def main():
 
     while True:
         values = xbox.get_values()
+        if values is None:
+            time.sleep(0.02)
+            continue
         last_event_time = time.time()
 
         # --- Chenille gauche (joystick gauche Y) ---
         if "ABS_Y" in values:
-            val_gauche = normalize(values["ABS_Y"])
+            raw = values["ABS_Y"]
+            val_gauche = xbox.convert_to_percent(raw)
             left_track.set_speed(val_gauche)
 
         # --- Chenille droite (trigger / joystick selon ton mapping) ---
         if "ABS_RZ" in values:
-            val_droite = normalize(values["ABS_RZ"])
+            raw = values["ABS_RZ"]
+            val_droite = xbox.convert_to_percent(raw)
             right_track.set_speed(val_droite)
 
         time.sleep(0.02)
