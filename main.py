@@ -64,7 +64,7 @@ def main():
         if values is None:
             time.sleep(0.02)
             continue
-        #last_event_time = time.time()
+        last_event_time = time.time()
         # --- Chenille gauche (joystick gauche Y) ---
         if "ABS_Y" in values:
             raw = values["ABS_Y"]
@@ -82,7 +82,7 @@ def main():
                 right_track.set_speed(val_droite)
             else:
                 right_track.stop()
-
+        values = None
         time.sleep(0.02)
 
 
