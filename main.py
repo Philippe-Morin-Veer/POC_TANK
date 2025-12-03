@@ -49,8 +49,7 @@ def heartbeat(xbox_controller):
         print("Heartbeat started.")
         global last_event_time
         global isConnected
-        while True:
-            print("Heartbeat check...")
+        while True:            
             last_event = xbox_controller.last_event
             now = time.time()
             print("Last event:", last_event)
@@ -74,7 +73,6 @@ def main():
 
     while True:
         values = varXbox.get_values()
-        print(values)
         if values is None:
             time.sleep(0.02)
             continue
