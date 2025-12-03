@@ -66,8 +66,9 @@ def main():
         if values is None:
             time.sleep(0.02)
             continue
+        print("Controller values:", values)
         last_event_time = time.time()
-
+        print("Updating last_event_time:", last_event_time)
         # --- Chenille gauche (joystick gauche Y) ---
         if "ABS_Y" in values:
             raw = values["ABS_Y"]
