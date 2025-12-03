@@ -45,8 +45,11 @@ timeout = 1.0
 def heartbeat():
     global last_event_time
     while True:
+        print("Heartbeat check...")
         now = time.time()
+        print(f"Last event time: {last_event_time}, Now: {now}")
         if now - last_event_time > timeout:
+            print("Heartbeat timeout! Arrêt du tank.")
             stop_tank()
         time.sleep(0.2)
 
