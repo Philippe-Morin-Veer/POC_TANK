@@ -69,14 +69,15 @@ def main():
         if "ABS_Y" in values:
             raw = values["ABS_Y"]
             val_gauche = xbox.convert_to_percent(raw)
-            print(val_gauche)
-            left_track.set_speed(val_gauche)
+            if val_gauche > 10 or val_gauche < -10:
+                left_track.set_speed(val_gauche)
 
         # --- Chenille droite (trigger / joystick selon ton mapping) ---
         if "ABS_RZ" in values:
             raw = values["ABS_RZ"]
             val_droite = xbox.convert_to_percent(raw)
-            right_track.set_speed(val_droite)
+            if val_droite > 10 or val_droite < -10:
+                right_track.set_speed(val_droite)
 
         time.sleep(0.02)
 
