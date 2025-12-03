@@ -40,7 +40,7 @@ class XboxController:
                     self.values[code] = value
 
             time.sleep(0.001)
-
+        
     def start(self):
         if not self.running:
             self.running = True
