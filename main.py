@@ -44,17 +44,20 @@ last_event_time = time.time()
 timeout = 1.0
 
 def heartbeat(xbox_controller):
-    print("Heartbeat started.")
-    global last_event_time
-    while True:
-        print("Heartbeat check...")
-        last_event = xbox_controller.last_event
-        now = time.time()
-        if now - last_event > timeout:
-            print("Heartbeat timeout! Arrêt du tank.")
-            stop_tank()
-        print(now - last_event)
-        time.sleep(0.2)
+    try:
+        print("Heartbeat started.")
+        global last_event_time
+        while True:
+            print("Heartbeat check...")
+            last_event = xbox_controller.last_event
+            now = time.time()
+            if now - last_event > timeout:
+                print("Heartbeat timeout! Arrêt du tank.")
+                stop_tank()
+            print(now - last_event)
+            time.sleep(0.2)
+    except Exception as e:
+        print(f"Heartbeat error: {e}")
 
 
 # === Boucle principale ===
