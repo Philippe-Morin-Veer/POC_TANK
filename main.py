@@ -54,7 +54,7 @@ def heartbeat():
 # === Boucle principale ===
 def main():
     global last_event_time
-
+    deadzone = 30
     xbox = XboxController("/dev/input/event4")
     xbox.start()
 
@@ -69,15 +69,19 @@ def main():
         if "ABS_Y" in values:
             raw = values["ABS_Y"]
             val_gauche = xbox.convert_to_percent(raw)
-            if val_gauche > 30 or val_gauche < -30:
+            if val_gauche > deadzone or val_gauche < -deadzone:
                 left_track.set_speed(val_gauche)
+            else:
+                left_track.stop()
 
         # --- Chenille droite (trigger / joystick selon ton mapping) ---
         if "ABS_RZ" in values:
             raw = values["ABS_RZ"]
             val_droite = xbox.convert_to_percent(raw)
-            if val_droite > 30 or val_droite < -30:
+            if val_droite > deadzone or val_droite < -deadzone:
                 right_track.set_speed(val_droite)
+            else:
+                right_track.stop()
 
         time.sleep(0.02)
 
