@@ -48,6 +48,7 @@ def heartbeat(xbox_controller):
     try:
         print("Heartbeat started.")
         global last_event_time
+        global isConnected
         while True:
             print("Heartbeat check...")
             last_event = xbox_controller.last_event
