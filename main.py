@@ -14,7 +14,7 @@ vitesse_gauche = 16
 vitesse_droite = 13
 pwm_freq = 2000
 varXbox = XboxController("/dev/input/event4")
-isConnected = False
+isConnected = True
 
 GPIO.setmode(GPIO.BCM)
 
