@@ -8,9 +8,7 @@ class XboxController:
         self.gamepad = None
         self.connected = False
         self.values = {
-            #"ABS_X": 32767,
             "ABS_Y": 32767,
-            #"ABS_Z": 32767,
             "ABS_RZ": 32767,
         }
 
