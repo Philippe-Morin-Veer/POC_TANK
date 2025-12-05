@@ -24,16 +24,6 @@ right_track = Chenille(forward_right, rear_right, vitesse_droite, pwm_freq)
 
 
 # === Fonctions ===
-"""def normalize(value):
-    mid = 32767
-    if value == mid:
-        return 0
-    if value < mid:
-        return int((mid - value) / mid * 100)
-    else:
-        return int(-((value - mid) / mid) * 100)"""
-
-
 def stop_tank():
     left_track.stop()
     right_track.stop()

@@ -7,3 +7,87 @@
 -   Philippe Morin-Veer
 -   Natthan Poulin
 -   Matthew Correia
+-   Mathis Lacasse
+
+## Comment faire fonctionner le projet?
+
+APPAIRER LA MANETTE XBOX EN BLUETOOTH:
+
+1. Appairer la manette Xbox One en Bluetooth
+   1.1. Vérifier que le Bluetooth est OK
+
+Dans un terminal sur le Pi :
+
+sudo apt update
+sudo apt install bluetooth bluez bluez-tools
+
+Activer le service :
+
+sudo systemctl enable bluetooth
+sudo systemctl start bluetooth
+
+Vérifier qu’il tourne :
+
+systemctl status bluetooth
+
+1.2. Mettre la manette en mode appairage
+
+Sur la manette Xbox One :
+
+Allume la manette (bouton Xbox).
+
+Maintiens le petit bouton Pair (en haut, près du port USB) jusqu’à ce que le logo Xbox clignote rapidement.
+
+1.3. Appairage avec bluetoothctl
+
+Sur le Pi :
+
+bluetoothctl
+
+Dans la console interactive qui s’ouvre :
+
+power on
+agent on
+default-agent
+scan on
+
+Tu devrais voir une ligne du type :
+
+[NEW] Device 98:7A:14:23:DE:BB Xbox Wireless Controller
+**Veuillez noter l'adresse MAC**
+
+Ensuite :
+
+pair 98:7A:14:23:DE:BB
+trust 98:7A:14:23:DE:BB
+connect 98:7A:14:23:DE:BB
+**Changer les adresses MAC ci-dessus par l'adresse de votre manette**
+
+Si tout se passe bien, tu vois un message du type Connection successful.
+Tu peux ensuite faire :
+
+exit
+
+Pour vérifier que le système voit bien un gamepad :
+
+ls /dev/input
+
+Tu devrais avoir un device du style eventX associé à la manette.
+Tu peux aussi vérifier avec :
+
+cat /proc/bus/input/devices | grep -i -A5 xbox
+
+LANCER LE SERVEUR WEB:
+Dans le terminal :
+mjpg_streamer \
+ -i "input_uvc.so -d /dev/video0 -r 640x480 -f 30 --no_dynctrl" \
+ -o "output_http.so -p 8080 -w ~/POC_TANK/mjpg-streamer/mjpg-streamer-experimental/www"
+
+Ensuite, on ouvre ce lien sur le web:
+http://10.4.1.50:8080/?action=stream
+
+LANCER LE TANK:
+On run le .venv dans bin:
+source activate
+
+python main.py
